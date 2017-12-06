@@ -1,0 +1,47 @@
+class PathBuilder:
+    def __init__(self, objects):
+        self.objects = objects
+        self.objects_by_id = {o['id']:o for o in objects}
+   
+    def get_object(self, object_id):
+        return self.objects_by_id[object_id]
+   
+    def get_parent(self, o):
+        return self.get_object(o['parentId'])
+   
+    def has_parent(self, o):
+        return 'parentId' in o
+   
+    def build_paths(self):
+        for o in self.objects:
+            self.__build_path_helper__(o)
+   
+    def __build_path_helper__(self, o):
+        if 'ids' not in o:
+            parentIds = []
+            parentNames = []
+           
+            if self.has_parent(o):
+                parent = self.get_parent(o)
+               
+                if 'children_ids' not in parent:
+                    parent['children_ids'] = []
+                    
+                parent['children_ids'].append(o['id'])
+               
+                self.__build_path_helper__(parent)
+                parentIds = parent['ids']
+                parentNames = parent['names']
+               
+            o['ids'] = parentIds + [o['id']]
+            #o['idPath'] = '/' + '/'.join([str(i) for i in o['ids']]) + '/'
+            o['names'] = parentNames + [o['name']]
+            #o['namePath'] = '/' + '/'.join(o['names']) + '/'
+ 
+def build_paths(*arg):
+    objects = []
+   
+    for a in arg:
+        objects.extend(a)
+   
+    PathBuilder(objects).build_paths()
